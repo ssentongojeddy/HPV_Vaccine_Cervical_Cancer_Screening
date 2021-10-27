@@ -1,0 +1,13 @@
+Author,Year_Publication,Study_Period,Time,Country,WHO,Study_Design,Quality,Score,Mean_Age,Study_Design,Age_SD,RR,RR_L,RR_U,N_Vaccinated,N_Unvaccinated,Journal,Stats,Ratio type,RR_Crude,RR_Crude_L,RR_Crude_U,RR_1dose,RR_L_1dose,RR_U_1dose,,RR_2dose,RR_L_2dose,RR_U_2dose,,RR_3dose,RR_L_3dose,RR_U_3dose,HPV_Vaccine_perc,White_perc,Black_perc,Insurance,Insurance _Type
+Ba et al,2021,2006-2016,2001,US,Americas,Retrospective Cohort,9,High,23.3,Cohort,1.6,1.34,1.33,1.35,190982,763928,Medicine,GEE,Incidence rate ratio,,,,1.14,1.13,1.16,,1.39,1.37,1.41,,1.6,1.58,1.63,,,,,
+Kreusch et al,2018,1988-1991,1990,Sweden,Europe,Prospective Cohort,8,High,18.1,Cohort,,1.1,1.09,1.12,35460,225974,BMJ Open,Cox regression,Hazard ratio,1.32,1.3,1.34,,,,,,,,,,,,,,,,
+Williams et al,2010,2010,2010,US,Americas,Cross-sectional,5,Moderate,,Cross-sectional,,1.3,1,1.9,,,Vaccine,Logistic regression,Odds ratio,,,,,,,,,,,,,,,,,,,
+Paynter et al,2015,2006-2009,2008,US,Americas,Retrospective Cohort,7,Moderate,,Cohort,,0.82,0.67,1.02,1154,1154,Prevent Medicine Reports,Logistic regression,Odds ratio,1.36,1.16,1.61,1,0.9,1.01,,1.8,1.34,2.41,,3.46,2.58,4.65,,,,,
+Sauer et al,2015,2008-2013,2011,US,Americas,Cross-sectional,5,Moderate,,Cross-sectional,,1.06,1.04,1.11,,,Cancer epidemiology,Predicted marginal model,Prevalence ratio,1.11,1.09,1.15,,,,,,,,,,,,15.3,60,15,76,
+Beer et al,2013,2010-2012,2011,UK,Europe,Retrospective Cohort,8,High,,Cohort,,1.72,1.64,1.81,149666,15916,Vaccine,Logistic regression,Odds ratio,1.96,1.86,2.05,,,,,1.27,1.18,1.36,,,,,,,,,
+Chao et al,2017,2010-2013,2012,US,Americas,Retrospective Cohort,8,High,,Cohort,,1.6,1.49,1.72,17485,9867,AJOG,Logistic regression,Odds ratio,1.77,1.65,1.89,0.93,0.83,1.04,,1.73,1.52,1.97,,2.29,2.05,2.56,,,,,
+Boone et al,2016,2006-2009,2008,US,Americas,Retrospective Cohort,7,Moderate,,Cohort,,2.98,2.45,3.61,1123,1123,Cancer epidemiology,Cox regression,Hazard ratio,,,,2.98,2.45,3.61,,1.01,0.77,1.34,,1.94,0.71,1.26,,,53,,
+Herweijer et al,2015,2006-2012,2010,Sweden,Europe,Prospective Cohort,8,High,,Cohort,,1.05,1.02,1.08,4897,624804,Plos One,Cox regression,Hazard ratio,1.28,1.24,1.32,,,,,,,,,,,,,,,,
+Mather et al,2012,2011,2011,Australia,Western Pacific,Cross-sectional,6,Moderate,19,Cross-sectional,2,2.07,0.71,5.98,119,74,Vaccine,Logistic regression,Odds ratio,,,,,,,,,,,,,,,,,,,
+Baldur-Felskov et al,2013,2006-2012,2010,Denmark,Europe,Prospective Cohort,7,Moderate,,Cohort,,,,,400886,1642840,JNCI,Cox regression,Hazard ratio,2.73,1.8,4.13,,,,,,,,,,,,,,,,
+Hirth et al,2016,2006-2009,2008,US,Americas,Retrospective Cohort,7,Moderate,,Cohort,,1.44,1.09,1.92,,,Prevent Medicine Reports,Logistic regressionO,Odds ratio,,,,,,,,1.25,1.15,1.35,,1.67,1.54,1.82,,,,,
