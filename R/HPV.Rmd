@@ -1,0 +1,385 @@
+---
+title: 'Mushroom and Stomach Cancer: Meta-analysis'
+output:
+  html_document:
+    df_print: paged
+---
+
+
+# LOAD REQUIRED PACKAGES AND FUNCTIONS -----------------------------------------
+```{r, message=FALSE}
+library(olsrr) # linear regression
+library(tidyverse) # general stuff
+library(hrbrthemes) # pretty plots
+library(ggplot2) # pretty plots
+library(plotly) # interactive plots
+library(gapminder) # interactive plots
+library(pastecs) # stat.desc
+library(metafor) # for meta-analysis: mixed-effects logistic and Poisson regression models
+library(meta) # meta-regression, GLMM, forest plots,(subgroup) meta-analyses.
+library(sp) # spatial data
+library(rgdal) #  projection/transformation operations for shapefiles
+library(sf) # Simple Features for R
+library(rnaturalearth)
+library(tmap) # cool maps
+library(ggpubr) # 'ggplot2' Based Publication Ready Plots
+library(ggpmisc) #Miscellaneous Extensions to 'ggplot2'
+library(spData)
+library(cowplot)# plot grid
+library(ggsci)
+library(RColorBrewer)
+library(ggrepel)
+library(readxl)
+```
+
+# Objectives:
+## Determine the association between mushroom consumption and stomach cancer
+## Characterize the modifiers for the mushroom-stomach cancer
+## Factors to explore: WHO region, Study design, Smoking and H.pylori rates, Income group, Mean age, proportion male
+
+
+# read data -----------------------------------------
+```{r}
+rm(list=ls())
+#dat1=read.csv("Main.csv")
+#dat=read.csv("data/stop3.csv")
+#dat<- read_excel("data/HPV.xlsx")
+#dat=read.csv("data/pool2.csv")
+dat=read.csv("data/HPV.csv")
+
+```
+
+
+# Meta-analysis using Maximum likehood Adjusted-----------------------------------------
+```{r}
+
+l1=is.na(dat$RR)
+dat=dat[!l1,]
+
+dat$TE=log(dat$RR)
+dat$lower <- log(dat$RR_L)
+dat$upper <- log(dat$RR_U)
+dat$seTE <- (dat$upper - dat$lower)/3.92
+
+
+
+#l1=is.na(dat$CRR)
+#dat=dat[!l1,]
+
+
+#dat$TE=log(dat$CRR)
+#dat$seTE=(log(dat$CRR_U-log(dat$CRR_L))/(3.92))
+
+
+
+m <- metagen(TE,
+             seTE,
+             data=dat,
+             #studlab=paste(Study,Age,Male, Country,sep = ","),
+             studlab=paste(Author,Year_Publication,Country,sep = ", " ),
+             comb.fixed = T,
+             comb.random = T,
+             hakn = F,
+             prediction=F,
+             sm="RR")
+
+m
+
+```
+
+
+# Meta-analysis using Maximum likehood UnAdjusted-----------------------------------------
+```{r, eval=T}
+
+dat=read.csv("data/HPV.csv")
+
+l1=is.na(dat$RR_Crude)
+dat1=dat[!l1,]
+
+dat1$TE=log(dat1$RR_Crude)
+dat1$lower <- log(dat1$RR_Crude_L)
+
+dat1$upper <- log(dat1$RR_Crude_U)
+
+dat1$seTE <- (dat1$upper - dat1$lower)/3.92
+
+mm <- metagen(TE,
+             seTE,
+             data=dat1,
+             #studlab=paste(Study,Age,Male, Country,sep = ","),
+             studlab=paste(Author,Year_Publication,Country,sep = ", " ),
+             comb.fixed = T,
+             comb.random = T,
+             hakn = F,
+             prediction=F,
+             sm="RR")
+
+mm
+
+```
+
+
+
+
+
+
+#Influence analysis  using leave-one-out -----------------------------------------
+```{r}
+pdf("figs/InfluencialPlots.pdf", width = 10, height = 20)
+forest(metainf(m, pooled = "random"))
+dev.off()
+
+inf1=metainf(m, pooled = "random")
+summary(inf1)
+```
+
+
+```{r fig.height=3, fig.width=4, echo=FALSE,warning=FALSE}
+forest(inf1,
+       leftlabs = c("Study"),
+       digits = 2,
+       col.by="black",
+       #sortvar = "TE",
+       squaresize=0.5,
+       col.square="blue",
+       col.diamond="maroon",
+       col.diamond.lines="maroon",
+       xlab="risk ratio for HPV vaccination and cervical cancer screening",
+       print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       #xlim = c(0, 1.6), at = c(0,0.5,1.6),
+       backtransf = T)
+
+```
+
+
+
+# trim and fill : Risk ratio -----------------------------------------
+
+
+
+```{r}
+tf2 <- trimfill(m)
+summary(tf2)
+pdf("figs/Trimmed.pdf", width = 10, height = 10)
+funnel(tf2)
+dev.off()
+funnel(tf2, pch = ifelse(tf2$trimfill, 1, 16),
+       level = 0.9, comb.random = T,backtransf = T)
+#
+```
+
+
+
+
+# Funnel plots : Risk ratio -----------------------------------------
+```{r}
+
+pdf("figs/FunnelPlotFinal.pdf", width = 10, height = 10)
+funnel(m,xlab = "log transformed proportions",studlab = F)
+dev.off()
+
+metabias(m, method="linreg")# Egger's linear regression test
+
+```
+
+
+```{r}
+
+metabias(m, method="rank")
+
+```
+
+
+
+# Plot figure 1: Overall: Adjusted
+```{r,fig.height=3, fig.width=4, echo=FALSE,warning=FALSE}
+
+
+pdf("figs/Overall_Adjusted.pdf", width = 10, height = 5)
+forest(m,sortvar = TE,test.overall = T, overall= T, overall.hetstat = T,
+       colgap.forest.left = "0.38 cm",print.byvar = F,
+       squaresize=0.5, col.square="navy",
+       col.diamond="maroon", col.diamond.lines="maroon",
+       col.by="black",leftcols=("studlab"),leftlabs = c("Study, Year, Country"),
+       rightlabs = c("RR","95% CI","Weight"), just = "center", just.addcols = "center",
+       print.zval = FALSE,text.fixed="Overall (Fixed-Effect Model)",text.random="Overall (Random-Effect Model)",comb.random = T,comb.fixed = F, print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       test.overall.fixed=FALSE,test.overall.random = F)
+dev.off()
+#0.75  (0.61-0.92)
+```
+
+
+# Plot figure 1: Overall: unadjusted
+```{r,fig.height=3, fig.width=4, echo=FALSE,warning=FALSE}
+
+
+pdf("figs/Overall_Crude.pdf", width = 10, height = 4)
+forest(mm,sortvar = TE,test.overall = T, overall= T, overall.hetstat = T,
+       colgap.forest.left = "0.38 cm",print.byvar = F,
+       squaresize=0.5, col.square="navy",
+       col.diamond="maroon", col.diamond.lines="maroon",
+       col.by="black",leftcols=("studlab"),leftlabs = c("Study, Year, Country"),
+       rightlabs = c("RR","95% CI","Weight"), just = "center", just.addcols = "center",
+       print.zval = FALSE,text.fixed="Overall (Fixed-Effect Model)",text.random="Overall (Random-Effect Model)",comb.random = T,comb.fixed = F, print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       test.overall.fixed=FALSE,test.overall.random = F)
+dev.off()
+#0.75  (0.61-0.92)
+```
+
+
+
+#  Begg's rank test
+```{r}
+
+metabias(m, method="rank")
+
+```
+
+```{r}
+dat7=read.csv("data/HPV.csv")
+library(reshape)
+
+l1=reshape(dat7, varying=list(RR= c("RR_1dose", "RR_2dose", "RR_3dose"),
+                            LCI= c("RR_L_1dose", "RR_L_2dose","RR_L_3dose"),
+                            UCI= c("RR_U_1dose", "RR_U_2dose","RR_U_3dose")), 
+          v.names=c("RR", "LCI", "UCI"), 
+          # that was needed after changed 'varying' arg to a list to allow 'times' 
+          direction="long",  
+          times=1:3,        # substitutes number for T1 and T2
+          timevar="times")  # to name the time col
+
+l1$times=factor(l1$times)
+
+levels(l1$times)=c("First Dose", "Second Dose", "Third Dose")
+
+
+
+l2=is.na(l1$RR)
+dat2=l1[!l2,]
+
+dat2$TE=log(dat2$RR)
+dat2$seTE=(log(dat2$UCI-log(dat2$LCI))/(3.92))
+
+
+
+mmm <- metagen(TE,
+             seTE,
+             data=dat2,
+             studlab=paste(Author,Year_Publication,Country,sep = ", " ),
+             comb.fixed = F,
+             comb.random = T,
+             prediction=F,
+             sm="RR")
+
+mmm
+
+m2<-update.meta(mmm, 
+                byvar=dat2$times, 
+                comb.random = TRUE, 
+                comb.fixed = FALSE)
+m2
+```
+
+# Plot figure 3: Dose response
+```{r,fig.height=3, fig.width=4, echo=FALSE,warning=FALSE}
+
+
+pdf("figs/Dose.pdf", width = 10, height = 8)
+forest(m2,sortvar = TE,test.overall = F, overall= F, overall.hetstat = T,
+       colgap.forest.left = "0.38 cm",print.byvar = F,
+       squaresize=0.5, col.square="navy",
+       col.diamond="maroon", col.diamond.lines="maroon",
+       col.by="black",leftcols=("studlab"),leftlabs = c("Study, Year, Country"),
+       rightlabs = c("RR","95% CI","Weight"), just = "center", just.addcols = "center",
+       print.zval = FALSE,text.fixed="Overall (Fixed-Effect Model)",text.random="Dose- specific random-effect estimates",comb.random = T,comb.fixed = F, print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       test.overall.fixed=FALSE,test.overall.random = F)
+dev.off()
+#0.75  (0.61-0.92)
+```
+
+
+
+
+
+# Plot figure 4: Regions
+```{r,fig.height=3, fig.width=4, echo=FALSE,warning=FALSE}
+who<- update(m, byvar=WHO,print.byvar=F)
+
+pdf("figs/WHO.pdf", width = 10, height = 8)
+forest(who,sortvar = TE,test.overall = T, overall= T, overall.hetstat = T,
+       colgap.forest.left = "0.38 cm",print.byvar = F,
+       squaresize=0.5, col.square="navy",
+       col.diamond="maroon", col.diamond.lines="maroon",
+       col.by="black",leftcols=("studlab"),leftlabs = c("Study, Year, Country"),
+       rightlabs = c("RR","95% CI","Weight"), just = "center", just.addcols = "center",
+       print.zval = FALSE,text.fixed="Overall (Fixed-Effect Model)",text.random="Overall (Random-Effect Model)",comb.random = T,comb.fixed = F, print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       test.overall.fixed=FALSE,test.overall.random = F)
+dev.off()
+#0.75  (0.61-0.92)
+```
+# Plot figure 4: Study design
+```{r,fig.height=3, fig.width=4, echo=FALSE,warning=FALSE}
+design<- update(m, byvar=Study_Design.1,print.byvar=F)
+
+pdf("figs/Design.pdf", width = 10, height = 8)
+forest(design,sortvar = TE,test.overall = T, overall= T, overall.hetstat = T,
+       colgap.forest.left = "0.38 cm",print.byvar = F,
+       squaresize=0.5, col.square="navy",
+       col.diamond="maroon", col.diamond.lines="maroon",
+       col.by="black",leftcols=("studlab"),leftlabs = c("Study, Year, Country"),
+       rightlabs = c("RR","95% CI","Weight"), just = "center", just.addcols = "center",
+       print.zval = FALSE,text.fixed="Overall (Fixed-Effect Model)",text.random="Overall (Random-Effect Model)",comb.random = T,comb.fixed = F, print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       test.overall.fixed=FALSE,test.overall.random = F)
+dev.off()
+#0.75  (0.61-0.92)
+```
+
+
+# Plot figure 4: score
+```{r,fig.height=3, fig.width=4, echo=FALSE,warning=FALSE}
+score<- update(m, byvar=Score,print.byvar=F)
+
+pdf("figs/Score.pdf", width = 10, height = 8)
+forest(score,sortvar = TE,test.overall = T, overall= T, overall.hetstat = T,
+       colgap.forest.left = "0.38 cm",print.byvar = F,
+       squaresize=0.5, col.square="navy",
+       col.diamond="maroon", col.diamond.lines="maroon",
+       col.by="black",leftcols=("studlab"),leftlabs = c("Study, Year, Country"),
+       rightlabs = c("RR","95% CI","Weight"), just = "center", just.addcols = "center",
+       print.zval = FALSE,text.fixed="Overall (Fixed-Effect Model)",text.random="Overall (Random-Effect Model)",comb.random = T,comb.fixed = F, print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       test.overall.fixed=FALSE,test.overall.random = F)
+dev.off()
+#0.75  (0.61-0.92)
+```
+
+
+
+
+
+```{r male}
+output.metareg=metareg(m,Time)
+meta::bubble(output.metareg,
+       xlab = "study year",
+       col.line = "blue",
+       studlab = TRUE)
+
+```
+
+
+
+
+
